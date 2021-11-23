@@ -1,1 +1,1 @@
-Eine kleine Sammlung von Powershell Skripte für PRTG Sensoren
+Eine kleine Sammlung von Powershell Skripten für PRTG Sensoren
