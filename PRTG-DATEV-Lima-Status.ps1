@@ -1,7 +1,7 @@
 # PRTG-Skript zum prüfen des DATEV Lima-Status
-# Stannek GmbH - E.Sauerbier - v.2.04 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.2.05 - 23.11.2021
 
-# Servername vom PRTG-Sensor, falls der Lima nicht auf der PRTG-Probe läuft
+# Servername für den PRTG-Sensor, falls der Lima nicht auf der PRTG-Probe läuft
 param([string]$LiMaServer = "N/A")
 
 # Pfad zum DATEV LimaStatus-Tool
@@ -25,12 +25,12 @@ $process = Invoke-Command -cn $LiMaServer -ScriptBlock {param($PathLimaStatusToo
 }
 
 # Ergebnis des DATEV Tools auswerten
-if ($process.ExitCode -eq $Null ) {$errormessage = "Fehler beim Aufruf vom Tool (LiMaStatus.exe) auf folgendem Server: $LiMaServer";$LASTEXITCODE = "5"}
-if ($process.ExitCode -eq "4" ) {$errormessage = "POOL_INKONSISTENT";$LASTEXITCODE = "4"}
-if ($process.ExitCode -eq "3" ) {$errormessage = "Falsche DLL";$LASTEXITCODE = "3"}
-if ($process.ExitCode -eq "2" ) {$errormessage = "Falscher Parameter";$LASTEXITCODE = "2"}
-if ($process.ExitCode -eq "1" ) {$errormessage = "Lima Gestoppt";$LASTEXITCODE = "1"}
-if ($process.ExitCode -eq "0" ) {$errormessage = "Lima-Status OK";$LASTEXITCODE = "0"}
+if ($process.ExitCode -eq $Null ) {$prtgtext= "Fehler beim Aufruf vom Tool (LiMaStatus.exe) auf folgendem Server: $LiMaServer";$LASTEXITCODE = "5"}
+if ($process.ExitCode -eq "4" ) {$prtgtext= "POOL_INKONSISTENT";$LASTEXITCODE = "4"}
+if ($process.ExitCode -eq "3" ) {$prtgtext= "Falsche DLL";$LASTEXITCODE = "3"}
+if ($process.ExitCode -eq "2" ) {$prtgtext= "Falscher Parameter";$LASTEXITCODE = "2"}
+if ($process.ExitCode -eq "1" ) {$prtgtext= "Lima Gestoppt";$LASTEXITCODE = "1"}
+if ($process.ExitCode -eq "0" ) {$prtgtext= "Lima-Status OK";$LASTEXITCODE = "0"}
 
 # XML Ausgabe für PRTG
 "<prtg>"
@@ -38,5 +38,5 @@ if ($process.ExitCode -eq "0" ) {$errormessage = "Lima-Status OK";$LASTEXITCODE 
 "<channel>Lima-Status</channel>"
 "<value>"+$LASTEXITCODE+"</value>"
 "</result>"
-"<text>$errormessage</text>"
+"<text>$prtgtext</text>"
 "</prtg>"
