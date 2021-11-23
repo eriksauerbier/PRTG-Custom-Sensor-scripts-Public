@@ -1,5 +1,5 @@
-# PRTG-Skript zum täglichen prüfen der FSLogix UserProfileDisks Größe
-# Stannek GmbH - Version 1.00 - 23.06.2021 ES
+# PRTG-Skript zum prüfen der FSLogix UserProfileDisks Größe
+# Stannek GmbH - Version 1.01 - 23.11.2021 ES
 
 # Parameter angeben
 
