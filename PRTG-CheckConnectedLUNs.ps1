@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft wieviele LUNs pro Hyper-V Host an jedem ClusterNode verbunden sind und schlägt bei ungleichheit an
-# Stannek GmbH - v.1.01 - E.Sauerbier 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.01 - 23.11.2021
 
 # Parameter für den PRTG-Sensor (ClusterNode auf dem das Skript ausgeführt wird und ClusterName
 param([string]$VMHost = "N/A",[string]$Cluster = "N/A")

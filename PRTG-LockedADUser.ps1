@@ -1,5 +1,5 @@
 # Dieses PRTG-Skript prüft ob ein AD-Benutzer gesperrt ist
-# Stannek GmbH - v.1.1 - E.Sauerbier 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.1 - 23.11.2021
 
 # AD-Modul importieren
 Import-Module ActiveDirectory -ErrorAction Stop

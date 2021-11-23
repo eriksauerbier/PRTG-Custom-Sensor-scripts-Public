@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft ob ein SwyxUser mit RemoteConnectorLogin deaktivert ist
-# Stannek GmbH - v.1.01 - E.Sauerbier 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.01 - 23.11.2021
 
 # Parameter für den PRTG-Sensor
 param([string]$SwyxServer = "N/A",[string]$Password = "N/A",$SwyxAdmin = "N/A",[string]$Domain = "N/A")

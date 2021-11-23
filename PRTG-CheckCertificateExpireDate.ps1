@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript sucht nach Zertifikaten die in X-Tagen ablaufen
-# Stannek GmbH - v.1.4 - E.Sauerbier 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.4 - 23.11.2021
 
 # Servername für PRTG-Sensor, falls der Cert-Server nicht auf der PRTG-Probe läuft
 param([string]$Server=$Null,[string]$CertPath="Cert:\LocalMachine\My",[string]$sincedays="31")

@@ -1,5 +1,5 @@
 # Dieses PRTG-Skript prüft ob ein Lokaler Benutzer gesperrt ist
-# Stannek GmbH - v.1.01 - E.Sauerbier 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.01 - 23.11.2021
 
 # Lokale User Abfrage
 $lockedAccounts = @(Get-WmiObject win32_useraccount -filter "LockOut=True")
