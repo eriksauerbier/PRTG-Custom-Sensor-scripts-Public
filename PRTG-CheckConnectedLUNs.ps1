@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft wieviele LUNs pro Hyper-V Host an jedem ClusterNode verbunden sind und schlägt bei ungleichheit an
-# Stannek GmbH - E.Sauerbier - v.1.01 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.02 - 16.12.2021
 
 # Parameter für den PRTG-Sensor (ClusterNode auf dem das Skript ausgeführt wird und ClusterName
 param([string]$VMHost = "N/A",[string]$Cluster = "N/A")
@@ -9,7 +9,7 @@ $failureHost = $null
 
 # ClusterNodes abfragen
 $ClusterNodes = Invoke-Command -cn $VMHost -ScriptBlock {
-$ClusterNodes = Get-ClusterNode | select -ExpandProperty Name
+$ClusterNodes = Get-ClusterNode | Select-Object -ExpandProperty Name
 return $ClusterNodes 
 }
 
@@ -24,7 +24,7 @@ foreach ($ClusterNode in $ClusterNodes){
 # Anzahl der verbundenen LUNs auf dem Host in der Schleife erfassen
 $ClusterNode = $ClusterNode + ".rzdom.local"
 $LunCount = invoke-command -computername $ClusterNode -scriptblock {
-$Luns = (gwmi -Namespace root\wmi -Class mpio_disk_info).driveinfo | Select-Object Name
+$Luns = (Get-WmiObjec -Namespace root\wmi -Class mpio_disk_info).driveinfo | Select-Object Name
 $Luns.Count
 }
 # Wenn die verbundenen LUNs abweichen, dann wird der betroffenen Host in eine Fehler-Variable geschrieben

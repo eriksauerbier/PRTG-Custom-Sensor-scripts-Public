@@ -1,5 +1,5 @@
 # PRTG-Skript zum prüfen der FSLogix UserProfileDisks Größe
-# Stannek GmbH - E.Sauerbier - Version 1.01 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - Version 1.02 - 16.12.2021
 
 # Parameter angeben
 
@@ -8,18 +8,18 @@ $FSLogixPolicyName = "FSLogixConfig"
 # weitere Parameter aus der FSLogix-GPO ermitteln
 
 $FSLogixgpo = Get-GPO -Name $FSLogixPolicyName
-$UPDSize = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "SizeInMBs" | Select -ExpandProperty Value
+$UPDSize = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "SizeInMBs" | Select-Object -ExpandProperty Value
 # Warnschwelle festlegen (15% Restgröße)
 $UPDCompareSize = $UPDSize - ($UPDSize * 0.15)
-$FslogixDir = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VHDLocations" | Select -ExpandProperty Value
+$FslogixDir = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VHDLocations" | Select-Object -ExpandProperty Value
 $FslogixDir = $FslogixDir -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies für gci Problematisch ist
-$VolumeType = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VolumeType" | Select -ExpandProperty Value
+$VolumeType = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VolumeType" | Select-Object -ExpandProperty Value
 $fileextension = "*." + $VolumeType
 $fileextension = $fileextension -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies für gci Problematisch ist
 
 # Größe der UPDs ermitteln
 
-$vhdxsize = gci $FslogixDir $fileextension -recurse | Select-Object Name, @{Name="Size";Expression={[Math]::round($_.length / 1MB, 2)}}
+$vhdxsize = Get-ChildItem $FslogixDir $fileextension -recurse | Select-Object Name, @{Name="Size";Expression={[Math]::round($_.length / 1MB, 2)}}
 
 # Vergleich der einzelnen UPDs
 foreach ($compare in $vhdxsize) {
