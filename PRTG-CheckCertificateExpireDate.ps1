@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript sucht nach Zertifikaten die in X-Tagen ablaufen
-# Stannek GmbH - E.Sauerbier - v.1.4 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.41 - 16.12.2021
 
 # Servername für PRTG-Sensor, falls der Cert-Server nicht auf der PRTG-Probe läuft
 param([string]$Server=$Null,[string]$CertPath="Cert:\LocalMachine\My",[string]$sincedays="31")
@@ -16,7 +16,7 @@ $searchdate =  Get-Date -format yyyy-MM-dd ((Get-Date).addDays($sincedays))
 # Remote-Abfrage der Ablaufdaten der Zertifikate im Zertifikatsspeicher
 
 $expiredCert = Invoke-Command -cn $Server -ScriptBlock { param($CertPath,$searchdate)
-gci -Recurse $CertPath | ?{$_.NotAfter -lt $searchdate} | select -ExpandProperty Subject
+get-childitem -Recurse $CertPath | ?{$_.NotAfter -lt $searchdate} | Select-Object -ExpandProperty Subject
 } -ArgumentList $CertPath,$searchdate -ErrorAction Stop
 
 
