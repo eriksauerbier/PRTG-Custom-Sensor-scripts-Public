@@ -1,12 +1,12 @@
-﻿# Dieses PRTG-Skript zum auslesen des CPU Überbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.0 - 20.05.2022
+﻿# Dieses PRTG-Skript liest den CPU Überbuchungsfaktor eines Hyper-V Hosts aus
+# Stannek GmbH - E.Sauerbier - v.1.01 - 30.05.2022
 
 # Parameter für den PRTG-Sensor
 param([string]$HyperVHost = "")
 
 ## Funktionen laden
 
-# Funktion zum auslesen der Hyper-V Host Infos, danke an Thomas Lauer
+# Funktion zum auslesen der Hyper-V Host Infos. Written by Haiko Hertes | www.hertes.net
 function Get-HyperVHostInfo()
 {   $vCores = ((Get-VM -ComputerName $env:COMPUTERNAME).ProcessorCount | Measure-Object -Sum).Sum
 
@@ -33,7 +33,7 @@ function Get-HyperVHostInfo()
 $HostData = Invoke-Command -ComputerName $HyperVHost -ScriptBlock ${function:Get-HyperVHostInfo}
 
 # Überbuchungsfaktor errechnen
-$CPURation = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
+$CPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
 $logCPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.LogicalCores),2))
 
 # XML Ausgabe für PRTG erzeugen
@@ -56,7 +56,7 @@ $output = @"
 </result>
 <result>
 <channel>Core:vCore Faktor</channel>
-<value>$CPURation</value>
+<value>$CPURatio</value>
 <Float>1</Float>
 </result>
 <result>
