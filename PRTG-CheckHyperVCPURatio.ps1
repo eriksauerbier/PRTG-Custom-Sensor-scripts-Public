@@ -1,15 +1,16 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Überbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.0 - 20.05.2022
+# Stannek GmbH - E.Sauerbier - v.1.1 - 01.06.2022
 
 # Parameter für den PRTG-Sensor
-param([string]$HyperVHost = "")
+param([string]$HyperVHost = " ")
 
 ## Funktionen laden
 
-# Funktion zum auslesen der Hyper-V Host Infos, danke an Thomas Lauer
+# Funktion zum auslesen der Hyper-V Host Infos. Written by Haiko Hertes | www.hertes.net
 function Get-HyperVHostInfo()
 {   $vCores = ((Get-VM -ComputerName $env:COMPUTERNAME).ProcessorCount | Measure-Object -Sum).Sum
-
+    
+    $VMCount = (Get-VM -ComputerName $env:COMPUTERNAME).Count
     $Property = "numberOfCores", "NumberOfLogicalProcessors"
     $CPUs = Get-Ciminstance -class Win32_Processor -Property  $Property -ComputerName $env:COMPUTERNAME| Select-Object -Property $Property 
     $Cores = ($CPUs.numberOfCores | Measure-Object -Sum).Sum
@@ -25,6 +26,7 @@ function Get-HyperVHostInfo()
     $object | Add-Member –MemberType NoteProperty –Name MemTotalGB -Value ([int]($os.TotalVisibleMemorySize/1mb))
     $object | Add-Member –MemberType NoteProperty –Name MemFreeGB -Value ([math]::Round($os.FreePhysicalMemory/1mb,2))
     $object | Add-Member –MemberType NoteProperty –Name MemFreePct -Value $MemFreePct
+    $object | Add-Member –MemberType NoteProperty –Name VMCount -Value $VMCount
 
     Return $object
 }
@@ -63,6 +65,10 @@ $output = @"
 <channel>LogicalCore:vCore Faktor (1 zu X)</channel>
 <value>$logCPURatio</value>
 <Float>1</Float>
+</result>
+<result>
+<channel>Anzahl VM</channel>
+<value>$($Hostdata.VMCount)</value>
 </result>
 <text>Der Host hat einen logischen Überbuchungsfaktor von 1 zu $logCPURatio </text>
 </prtg>
