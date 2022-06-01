@@ -35,7 +35,7 @@ function Get-HyperVHostInfo()
 $HostData = Invoke-Command -ComputerName $HyperVHost -ScriptBlock ${function:Get-HyperVHostInfo}
 
 # Überbuchungsfaktor errechnen
-$CPURation = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
+$CPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
 $logCPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.LogicalCores),2))
 
 # XML Ausgabe für PRTG erzeugen
@@ -58,7 +58,7 @@ $output = @"
 </result>
 <result>
 <channel>Core:vCore Faktor</channel>
-<value>$CPURation</value>
+<value>$CPURatio</value>
 <Float>1</Float>
 </result>
 <result>
