@@ -1,13 +1,14 @@
 # Dieses PRTG-Skript prüft ob ein AD-Benutzer gesperrt ist
-# Stannek GmbH - E.Sauerbier - v.1.1 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.2 - 02.08.2022
 
-# AD-Modul importieren
-Import-Module ActiveDirectory -ErrorAction Stop
+# Parameter für den PRTG-Sensor
+param([string]$DC = "")
 
-# AD-Abfrage
-$LockedUser=Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName
+if ($DC -eq "") {$LockedUser=Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName}
+Else {$LockedUser = Invoke-Command -ComputerName $DC -ScriptBlock {Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName}}
 
-If ($LockedUser -eq $Null) {$Prtgtext = "OK"}
+# Ausgabetext generieren
+If ($LockedUser -eq $Null) {$Prtgtext = "Keine Benutzer gesperrt"}
 Else {$Prtgtext = "Folgende Benutzer sind gesperrt: " + $LockedUser}
 
 # Ausgabe für PRTG
