@@ -1,19 +1,29 @@
 ﻿# Dieses PRTG-Skript prüft ob ein SwyxUser mit RemoteConnectorLogin deaktivert ist
-# Stannek GmbH - E.Sauerbier - v.1.01 - 23.11.2021
+# Stannek GmbH - E.Sauerbier - v.1.1 - 03.08.2022
 
 # Parameter für den PRTG-Sensor
-param([string]$SwyxServer = "N/A",[string]$Password = "N/A",$SwyxAdmin = "N/A",[string]$Domain = "N/A")
+param([string]$SwyxServer = " ",[string]$Password = " ",[string]$SwyxAdmin = " ")
 
 # Credentials für SwyxPS Anmeldung erstellen
 $SwyxAdminPass = ConvertTo-SecureString -AsPlainText $Password -Force
 $SwyxSRVCred = New-Object System.Management.Automation.PSCredential -ArgumentList $SwyxAdmin,$SwyxAdminPass
 
 # Abfrage auf dem Swyx-Server
-$lockedSwyxUser = @( Invoke-Command -cn $SwyxServer -Credential $SwyxSRVCred -ScriptBlock {
-&'C:\Program Files (x86)\SwyxWare Administration\Modules\IpPbx\IpPbxConsole.ps1' 'SwyxWare PowerShell'
+$lockedSwyxUser = @(Invoke-Command -cn $SwyxServer -Credential $SwyxSRVCred -ErrorAction Stop -ScriptBlock {
+# Swyx PS-Modul importieren
+Import-Module IpPbx
+# Mit Swyx Instanz verbinden
 Connect-IpPbx
-Get-IpPbxUser | Where {$_.Locked -eq $True -and $_.WindowsLoginAllowed -eq $True -and $_.IsCertificateThumbprintNull -eq $false}
+# User Abfrage starten
+Get-IpPbxUser | Where-Object {$_.Locked -eq $True -and $_.WindowsLoginAllowed -eq $True -and $_.IsCertificateThumbprintNull -eq $false}
+# Swyx Instanz trennen
+Disconnect-IpPbx
 })
+
+# Text für Ausgabe generieren
+
+if ($lockedSwyxUser.Count -gt "0") {$OutputText = "Folgende Swyx Benutzer sind deaktiviert: "+$lockedSwyxUser.Name}
+Else {$OutputText = "Es sind keine Swyx Benutzer deaktiviert"}
 
 # XML Ausgabe für PRTG
 #"<?xml version=`"1.0`" encoding=`"UTF-8`" ?>"
@@ -22,5 +32,5 @@ Get-IpPbxUser | Where {$_.Locked -eq $True -and $_.WindowsLoginAllowed -eq $True
 "<channel>deaktivierte SwyxUser</channel>"
 "<value>"+$lockedSwyxUser.Count+"</value>"
 "</result>"
-"<text>Folgende SwyxUser sind deaktiviert: "+$lockedSwyxUser.Name+"</text>"
+"<text>$OutputText</text>"
 "</prtg>"
