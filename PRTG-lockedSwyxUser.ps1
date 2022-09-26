@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft ob ein SwyxUser mit RemoteConnectorLogin deaktivert ist
-# Stannek GmbH - E.Sauerbier - v.1.1 - 03.08.2022
+# Stannek GmbH - E.Sauerbier - v.1.11 - 26.09.2022
 
 # Parameter für den PRTG-Sensor
 param([string]$SwyxServer = " ",[string]$Password = " ",[string]$SwyxAdmin = " ")
@@ -15,7 +15,7 @@ Import-Module IpPbx
 # Mit Swyx Instanz verbinden
 Connect-IpPbx
 # User Abfrage starten
-Get-IpPbxUser | Where-Object {$_.Locked -eq $True -and $_.WindowsLoginAllowed -eq $True -and $_.IsCertificateThumbprintNull -eq $false}
+Get-IpPbxUser | Where-Object {$_.Locked -eq $True -and $_.WindowsLoginAllowed -eq $True -and $_.IsCertificateThumbprintNull -eq $false -and $_.Comment -ne "OK"}
 # Swyx Instanz trennen
 Disconnect-IpPbx
 })
