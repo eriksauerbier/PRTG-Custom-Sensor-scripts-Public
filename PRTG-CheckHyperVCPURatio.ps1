@@ -1,8 +1,8 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Überbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.1 - 01.06.2022
+# Stannek GmbH - E.Sauerbier - v.1.2 - 11.01.2023
 
 # Parameter für den PRTG-Sensor
-param([string]$HyperVHost = " ")
+param([string]$HyperVHost = " ",[string]$Password = ' ',$Admin = " ")
 
 ## Funktionen laden
 
@@ -31,12 +31,19 @@ function Get-HyperVHostInfo()
     Return $object
 }
 
+# Credentials für PSRemote-Befehl erstellen
+$PSSCred = New-Object System.Management.Automation.PSCredential -ArgumentList $Admin,(ConvertTo-SecureString -AsPlainText $Password -Force)
+
 # Hyper-V Host Info auf dem Hyper-V Host abfragen
-$HostData = Invoke-Command -ComputerName $HyperVHost -ScriptBlock ${function:Get-HyperVHostInfo}
+$HostData = Invoke-Command -ComputerName $HyperVHost -Credential $PSSCred -ErrorVariable ConnectError -ScriptBlock ${function:Get-HyperVHostInfo}
 
 # Überbuchungsfaktor errechnen
 $CPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
 $logCPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.LogicalCores),2))
+
+# Ausgabe-Text generieren
+If ($Null -eq $ConnectError) {$OutPutText = "Es ist ein Fehler bei der VM-Abfrage aufgetreten";$CPURatio="0"}
+Else {$OutPutText = "Der Host hat einen logischen Überbuchungsfaktor von 1 zu $logCPURatio"}
 
 # XML Ausgabe für PRTG erzeugen
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -70,7 +77,7 @@ $output = @"
 <channel>Anzahl VM</channel>
 <value>$($Hostdata.VMCount)</value>
 </result>
-<text>Der Host hat einen logischen Überbuchungsfaktor von 1 zu $logCPURatio </text>
+<text>$OutPutText</text>
 </prtg>
 "@
 
