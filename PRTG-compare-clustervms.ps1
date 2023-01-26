@@ -1,5 +1,5 @@
 ﻿# Skript zum Vergleich der Cluster-VMs und der in VeeamBackupJobs befindlichen Cluster-VMs
-# Stannek GmbH - v.1.1.2 - 26.01.2023 - E.Sauerbier
+# Stannek GmbH - v.1.2 - 26.01.2023 - E.Sauerbier
 
 # Parameter für den PRTG-Sensor
 param([String]$remoteserver = "",[string]$User = "",[string]$Password = '')
@@ -9,11 +9,14 @@ $ScriptBlock = {
 # Powershell Modul importieren
 Import-Module Veeam.Backup.PowerShell
 
+#Connect-VBRServer -Credential $Cred
+
 # Aktive Veeam VM Backup-Jobs auslesen
 $Jobnames = Get-VBRJob | Where-Object {($_.JobType -eq "Backup") -and ($_.IsScheduleEnabled -eq "True")} | Select-Object Name
 
-# VM-Namen der Backup-Jobs in Variable schreiben
+# VM-Namen der Backup-Jobs in Variable schreiben und sortieren
 $Jobobjects = foreach ($Jobname in $Jobnames) {Get-VBRJobObject -Job $Jobname.Name | Select Name}
+$Jobobjects = $Jobobjects | Sort-Object Name
 
 # Cluster auslesen
 $Cluster = Get-Cluster -Domain $env:UserDomain
@@ -27,7 +30,7 @@ $NameClusterVM = $ClusterVM | ForEach-Object {$_.OwnerGroup}
 $object = New-Object -TypeName PSObject
 $object | Add-Member –MemberType NoteProperty –Name ClusterVM –Value $NameClusterVM
 $object | Add-Member –MemberType NoteProperty –Name CountClusterVM –Value $NameClusterVM.Count
-$object | Add-Member –MemberType NoteProperty –Name JobVMs –Value $Jobobjects
+$object | Add-Member –MemberType NoteProperty –Name JobVMs –Value $($Jobobjects | Select-Object -ExpandProperty Name)
 $object | Add-Member –MemberType NoteProperty –Name CountJobVM –Value $Jobobjects.Count
 
 return $object
@@ -39,18 +42,25 @@ Else {$Cred = New-Object System.Management.Automation.PSCredential -ArgumentList
       $Output = Invoke-Command -ComputerName $remoteserver -Credential $Cred -ScriptBlock $ScriptBlock}
 
 # Vergleichen der Cluster-VMs und der in VeeamBackupJobs befindlichen Cluster-VMs
-$Compare = Compare-Object -ReferenceObject $Output.ClusterVM.Name -DifferenceObject $Output.JobVMs.Name | Foreach-object InputObject
+$Compare = Compare-Object -ReferenceObject $Output.ClusterVM.Name -DifferenceObject $Output.JobVMs
+
+# Ausgabe generieren
+$NoBackup = $Compare | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject 
+$MultiBackup = $Compare | Where-Object SideIndicator -eq "=>" | Select-Object -ExpandProperty InputObject 
 
 # PRTG Ausgabetext generieren
 If ($Compare.Count -eq "0") {$OutputText = "Das Hyper-V Cluster hat "+$Output.CountClusterVM+" VMs und davon werden "+ $Output.CountJobVM +" Cluster-VMs gesichert"}
-Else {$OutputText = "Folgende VMs werden nicht gesichert: $($Compare)"}
+Else {
+    If ($Null -ne $NoBackup) {$OutputText = "Folgende VMs werden nicht gesichert: $NoBackup"}
+    Else {$OutputText = "Folgende VMs werden mehrfach gesichert: $MultiBackup"}
+    }
 
 # XML Ausgabe für PRTG
-"<?xml version=`"1.0`" encoding=`"UTF-8`" ?>"
+#"<?xml version=`"1.0`" encoding=`"UTF-8`" ?>"
 "<prtg>"
 "<result>" 
-"<channel>nicht gesicherte ClusterVMs</channel>"    
-"<value>"+ $Compare.Count +"</value>" 
+"<channel>Fehlerhafte VMs</channel>"    
+"<value>"+ $Compare.InputObject.Count +"</value>" 
 "</result>"
 "<result>" 
 "<channel>Anzahl Cluster VMs</channel>"    
