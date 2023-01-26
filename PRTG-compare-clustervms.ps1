@@ -1,5 +1,5 @@
 ﻿# Skript zum Vergleich der Cluster-VMs und der in VeeamBackupJobs befindlichen Cluster-VMs
-# Stannek GmbH - v.1.2 - 26.01.2023 - E.Sauerbier
+# Stannek GmbH - v.1.2.1 - 26.01.2023 - E.Sauerbier
 
 # Parameter für den PRTG-Sensor
 param([String]$remoteserver = "",[string]$User = "",[string]$Password = '')
@@ -49,7 +49,7 @@ $NoBackup = $Compare | Where-Object SideIndicator -eq "<=" | Select-Object -Expa
 $MultiBackup = $Compare | Where-Object SideIndicator -eq "=>" | Select-Object -ExpandProperty InputObject 
 
 # PRTG Ausgabetext generieren
-If ($Compare.Count -eq "0") {$OutputText = "Das Hyper-V Cluster hat "+$Output.CountClusterVM+" VMs und davon werden "+ $Output.CountJobVM +" Cluster-VMs gesichert"}
+If ($Compare.InputObject.Count -eq "0") {$OutputText = "Das Hyper-V Cluster hat "+$Output.CountClusterVM+" VMs und davon werden "+ $Output.CountJobVM +" Cluster-VMs gesichert"}
 Else {
     If ($Null -ne $NoBackup) {$OutputText = "Folgende VMs werden nicht gesichert: $NoBackup"}
     Else {$OutputText = "Folgende VMs werden mehrfach gesichert: $MultiBackup"}
