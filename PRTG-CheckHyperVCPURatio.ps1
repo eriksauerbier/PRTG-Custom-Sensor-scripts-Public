@@ -1,8 +1,8 @@
-﻿# Dieses PRTG-Skript zum auslesen des CPU Überbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.2 - 11.01.2023
+﻿# Dieses PRTG-Skript zum auslesen des CPU Ueberbuchungsfaktors.
+# Stannek GmbH - E.Sauerbier - v.1.3 - 01.09.2023
 
-# Parameter für den PRTG-Sensor
-param([string]$HyperVHost = " ",[string]$Password = ' ',$Admin = " ")
+# Parameter fuer den PRTG-Sensor
+param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
 
 ## Funktionen laden
 
@@ -11,12 +11,12 @@ function Get-HyperVHostInfo()
 {   $vCores = ((Get-VM -ComputerName $env:COMPUTERNAME).ProcessorCount | Measure-Object -Sum).Sum
     
     $VMCount = (Get-VM -ComputerName $env:COMPUTERNAME).Count
-    $Property = "numberOfCores", "NumberOfLogicalProcessors"
-    $CPUs = Get-Ciminstance -class Win32_Processor -Property  $Property -ComputerName $env:COMPUTERNAME| Select-Object -Property $Property 
+    $Property = '"numberOfCores", "NumberOfLogicalProcessors"'
+    $CPUs = Get-Ciminstance -class Win32_Processor -Property "numberOfCores", "NumberOfLogicalProcessors" | Select-Object -Property "numberOfCores", "NumberOfLogicalProcessors"
     $Cores = ($CPUs.numberOfCores | Measure-Object -Sum).Sum
     $logCores = ($CPUs.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
 
-    $os = Get-Ciminstance Win32_OperatingSystem -ComputerName $env:COMPUTERNAME
+    $os = Get-Ciminstance Win32_OperatingSystem
     $MemFreePct = [math]::Round(($os.FreePhysicalMemory/$os.TotalVisibleMemorySize)*100,2)
 
     $object = New-Object -TypeName PSObject
@@ -31,22 +31,21 @@ function Get-HyperVHostInfo()
     Return $object
 }
 
-# Credentials für PSRemote-Befehl erstellen
+# Credentials fuer PSRemote-Befehl erstellen
 $PSSCred = New-Object System.Management.Automation.PSCredential -ArgumentList $Admin,(ConvertTo-SecureString -AsPlainText $Password -Force)
 
 # Hyper-V Host Info auf dem Hyper-V Host abfragen
 $HostData = Invoke-Command -ComputerName $HyperVHost -Credential $PSSCred -ErrorVariable ConnectError -ScriptBlock ${function:Get-HyperVHostInfo}
 
-# Überbuchungsfaktor errechnen
+# Ueberbuchungsfaktor errechnen
 $CPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores),2))
 $logCPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.LogicalCores),2))
 
 # Ausgabe-Text generieren
-If ($Null -eq $ConnectError) {$OutPutText = "Es ist ein Fehler bei der VM-Abfrage aufgetreten";$CPURatio="0"}
-Else {$OutPutText = "Der Host hat einen logischen Überbuchungsfaktor von 1 zu $logCPURatio"}
+If ($ConnectError.Count -ne 0) {$OutPutText = "Es ist ein Fehler bei der VM-Abfrage aufgetreten";$CPURatio="0"}
+Else {$OutPutText = "Der Host hat einen logischen Ueberbuchungsfaktor von 1 zu $logCPURatio"}
 
-# XML Ausgabe für PRTG erzeugen
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+# XML Ausgabe fuer PRTG erzeugen
 $output = @"
 
 <?xml version=`"1.0`" encoding=`"UTF-8`" ?>
