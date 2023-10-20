@@ -1,49 +1,54 @@
-# PRTG-Skript zum prüfen der FSLogix UserProfileDisks Größe
-# Stannek GmbH - E.Sauerbier - Version 1.02 - 16.12.2021
+# PRTG-Skript zum taeglichen pruefen der FSLogix UserProfileDisks Groesse
+# Stannek GmbH - Version 2.0 - 20.10.2023 ES
 
 # Parameter angeben
-
-$FSLogixPolicyName = "FSLogixConfig"
+$NameGPOFSLogix = "FSLogixConfig"
 
 # weitere Parameter aus der FSLogix-GPO ermitteln
-
-$FSLogixgpo = Get-GPO -Name $FSLogixPolicyName
-$UPDSize = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "SizeInMBs" | Select-Object -ExpandProperty Value
+$GPOFSLogix = Get-GPO -Name $NameGPOFSLogix
+$SizePolicyUPD = Get-GPRegistryValue -Guid $GPOFSLogix.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "SizeInMBs" | Select -ExpandProperty Value
 # Warnschwelle festlegen (15% Restgröße)
-$UPDCompareSize = $UPDSize - ($UPDSize * 0.15)
-$FslogixDir = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VHDLocations" | Select-Object -ExpandProperty Value
-$FslogixDir = $FslogixDir -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies für gci Problematisch ist
-$VolumeType = Get-GPRegistryValue -Guid $FSLogixgpo.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VolumeType" | Select-Object -ExpandProperty Value
-$fileextension = "*." + $VolumeType
-$fileextension = $fileextension -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies für gci Problematisch ist
+$SizeCompareUPD = $SizePolicyUPD - ($SizePolicyUPD * 0.15)
+$PathUPD = Get-GPRegistryValue -Guid $GPOFSLogix.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VHDLocations" | Select -ExpandProperty Value
+$PathUPD = $PathUPD -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies fuer gci Problematisch ist
+$VolumeType = Get-GPRegistryValue -Guid $GPOFSLogix.Id -Key "HKLM\Software\FSLogix\Profiles" -ValueName "VolumeType" | Select -ExpandProperty Value
+$FileExtension = "*." + $VolumeType
+$FileExtension = $FileExtension -Replace ("`0","") # Entfernt ASCII NUL-Charakter, da dies fuer Get-Childitem Problematisch ist
 
 # Größe der UPDs ermitteln
-
-$vhdxsize = Get-ChildItem $FslogixDir $fileextension -recurse | Select-Object Name, @{Name="Size";Expression={[Math]::round($_.length / 1MB, 2)}}
+$SizeUPDs = Get-ChildItem -Path $PathUPD -Filter $FileExtension -recurse | Select-Object Name, @{Name="Size";Expression={[Math]::round($_.length / 1MB, 2)}}
 
 # Vergleich der einzelnen UPDs
-foreach ($compare in $vhdxsize) {
-if ($compare.Size -ge $UPDCompareSize) 
+foreach ($SizeUPD in $SizeUPDs) {
+if ($SizeUPD.Size -ge $SizeCompareUPD) 
     {
-    $CriticalUDPSize = $compare
+    $CriticalSizeUPD += @($SizeUPD)
     }
 }
 
-# Ausgabe für PRTG
-"<?xml version=""1.0"" encoding=""UTF-8"" ?>"
-"<prtg>"
-"<result>" 
-"<channel>Total ProfileDisks</channel>" 
-"<value>"+$vhdxsize.Count+"</value>"
-"</result>"
-"<result>" 
-"<channel>Max UPD Size</channel>" 
-"<value>"+$UPDSize+"</value>"
-"<Unit>Custom</Unit>"
-"<CustomUnit>MB</CustomUnit>"
-"</result>"
-"<result>"
-"<channel>Critical UPD Size</channel>"
- "<value>"+$CriticalUDPSize.Count+"</value>"
-"</result>"
-"</prtg>"
+# Sensortext festlegen
+If ($Null -eq $CriticalSizeUPD) {$TextPRTGSensor = "Alle UserProfileDisks sind kleiner als der Schwellwert"}
+Else {$TextPRTGSensor = "Folgende UserProfileDisk(s) sind groesser als der Schwellwert: " + $CriticalSizeUPD.Name}
+
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Total ProfileDisks</channel>`n" 
+$OutputStringXML += "<value>"+$SizeUPDs.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Max UPD Size</channel>`n" 
+$OutputStringXML += "<value>"+$SizePolicyUPD+"</value>`n"
+$OutputStringXML += "<Unit>Custom</Unit>`n"
+$OutputStringXML += "<CustomUnit>MB</CustomUnit>`n"
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Critical UPD Size</channel>`n"
+$OutputStringXML += "<value>"+$CriticalSizeUPD.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>" + $TextPRTGSensor  + "</text>`n"
+$OutputStringXML += "</prtg>"
+
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
