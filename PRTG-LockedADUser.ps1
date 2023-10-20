@@ -1,21 +1,25 @@
-# Dieses PRTG-Skript prüft ob ein AD-Benutzer gesperrt ist
-# Stannek GmbH - E.Sauerbier - v.1.2 - 02.08.2022
+# Dieses PRTG-Skript prueft ob ein AD-Benutzer gesperrt ist
+# Stannek GmbH - E.Sauerbier - v.1.5 - 20.10.2023
 
-# Parameter für den PRTG-Sensor
-param([string]$DC = "")
+# AD-Modul importieren
+Import-Module ActiveDirectory -ErrorAction Stop
 
-if ($DC -eq "") {$LockedUser=Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName}
-Else {$LockedUser = Invoke-Command -ComputerName $DC -ScriptBlock {Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName}}
+# AD-Abfrage
+$LockedUser=Search-ADAccount -LockedOut -UsersOnly | Select-Object -ExpandProperty SamAccountName
 
-# Ausgabetext generieren
-If ($LockedUser -eq $Null) {$Prtgtext = "Keine Benutzer gesperrt"}
-Else {$Prtgtext = "Folgende Benutzer sind gesperrt: " + $LockedUser}
+# Sensortext festlegen
+If ($Null -eq $LockedUser) {$TextPRTGSensor = "Es sind keine AD-Benutzer gesperrt"}
+Else {$TextPRTGSensor = "Folgende AD-Benutzer sind gesperrt: " + $LockedUser}
 
-# Ausgabe für PRTG
-"<prtg>"
-"<result>" 
-"<channel>Locked Users</channel>" 
-"<value>"+ $LockedUser.Count +"</value>" 
-"</result>"
-"<text>" + $PRTGtext  + "</text>"
-"</prtg>"
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Locked Users</channel>`n" 
+$OutputStringXML += "<value>"+ $LockedUser.Count +"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>" + $TextPRTGSensor  + "</text>`n"
+$OutputStringXML += "</prtg>"
+
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
