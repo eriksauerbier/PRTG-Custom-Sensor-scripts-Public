@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft ob ein SwyxUser mit RemoteConnectorLogin deaktivert ist
-# Stannek GmbH - E.Sauerbier - v.1.11 - 26.09.2022
+# Stannek GmbH - E.Sauerbier - v.1.2 - 07.11.2023
 
 # Parameter für den PRTG-Sensor
 param([string]$SwyxServer = " ",[string]$Password = " ",[string]$SwyxAdmin = " ")
@@ -21,16 +21,18 @@ Disconnect-IpPbx
 })
 
 # Text für Ausgabe generieren
+if ($lockedSwyxUser.Count -gt "0") {$TextPRTGSensor = "Folgende Swyx Benutzer sind deaktiviert: "+$lockedSwyxUser.Name}
+Else {$TextPRTGSensor = "Es sind keine Swyx Benutzer deaktiviert"}
 
-if ($lockedSwyxUser.Count -gt "0") {$OutputText = "Folgende Swyx Benutzer sind deaktiviert: "+$lockedSwyxUser.Name}
-Else {$OutputText = "Es sind keine Swyx Benutzer deaktiviert"}
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>deaktivierte SwyxUser</channel>`n" 
+$OutputStringXML += "<value>"+$lockedSwyxUser.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>"+$TextPRTGSensor+"</text>`n"
+$OutputStringXML += "</prtg>"
 
-# XML Ausgabe für PRTG
-#"<?xml version=`"1.0`" encoding=`"UTF-8`" ?>"
-"<prtg>"
-"<result>"
-"<channel>deaktivierte SwyxUser</channel>"
-"<value>"+$lockedSwyxUser.Count+"</value>"
-"</result>"
-"<text>$OutputText</text>"
-"</prtg>"
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
