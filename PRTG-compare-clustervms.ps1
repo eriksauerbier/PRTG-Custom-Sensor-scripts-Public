@@ -1,5 +1,5 @@
 ﻿# Skript zum Vergleich der Cluster-VMs und der in VeeamBackupJobs befindlichen Cluster-VMs
-# Stannek GmbH - v.1.2.1 - 26.01.2023 - E.Sauerbier
+# Stannek GmbH - v.1.3 - 07.11.2023 - E.Sauerbier
 
 # Parameter für den PRTG-Sensor
 param([String]$remoteserver = "",[string]$User = "",[string]$Password = '')
@@ -51,24 +51,27 @@ $MultiBackup = $Compare | Where-Object SideIndicator -eq "=>" | Select-Object -E
 # PRTG Ausgabetext generieren
 If ($Compare.InputObject.Count -eq "0") {$OutputText = "Das Hyper-V Cluster hat "+$Output.CountClusterVM+" VMs und davon werden "+ $Output.CountJobVM +" Cluster-VMs gesichert"}
 Else {
-    If ($Null -ne $NoBackup) {$OutputText = "Folgende VMs werden nicht gesichert: $NoBackup"}
-    Else {$OutputText = "Folgende VMs werden mehrfach gesichert: $MultiBackup"}
+    If ($Null -ne $NoBackup) {$TextPRTGSensor = "Folgende VMs werden nicht gesichert: $NoBackup"}
+    Else {$TextPRTGSensor = "Folgende VMs werden mehrfach gesichert: $MultiBackup"}
     }
 
-# XML Ausgabe für PRTG
-#"<?xml version=`"1.0`" encoding=`"UTF-8`" ?>"
-"<prtg>"
-"<result>" 
-"<channel>Fehlerhafte VMs</channel>"    
-"<value>"+ $Compare.InputObject.Count +"</value>" 
-"</result>"
-"<result>" 
-"<channel>Anzahl Cluster VMs</channel>"    
-"<value>"+ $Output.CountClusterVM +"</value>" 
-"</result>"
-"<result>" 
-"<channel>Anzahl VMs in Backupjobs</channel>"    
-"<value>"+ $Output.CountJobVM +"</value>" 
-"</result>"
-"<text>$OutputText</text>"
-"</prtg>"
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Fehlerhafte VMs</channel>`n" 
+$OutputStringXML += "<value>"+$Compare.InputObject.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Anzahl Cluster VMs</channel>`n" 
+$OutputStringXML += "<value>"+$Output.CountClusterVM+"</value>`n"
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Anzahl VMs in Backupjobs</channel>`n"
+$OutputStringXML += "<value>"+$Output.CountJobVM+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>" + $TextPRTGSensor  + "</text>`n"
+$OutputStringXML += "</prtg>"
+
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
