@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Ueberbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.3 - 01.09.2023
+# Stannek GmbH - E.Sauerbier - v.1.4 - 07.11.2023
 
 # Parameter fuer den PRTG-Sensor
 param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
@@ -42,42 +42,40 @@ $CPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.PhysicalCores
 $logCPURatio = $([math]::Round(($Hostdata.VirtualCores) /  ($Hostdata.LogicalCores),2))
 
 # Ausgabe-Text generieren
-If ($ConnectError.Count -ne 0) {$OutPutText = "Es ist ein Fehler bei der VM-Abfrage aufgetreten";$CPURatio="0"}
-Else {$OutPutText = "Der Host hat einen logischen Ueberbuchungsfaktor von 1 zu $logCPURatio"}
+If ($ConnectError.Count -ne 0) {$TextPRTGSensor = "Es ist ein Fehler bei der VM-Abfrage aufgetreten";$CPURatio="0"}
+Else {$TextPRTGSensor = "Der Host hat einen logischen Ueberbuchungsfaktor von 1 zu $logCPURatio"}
 
-# XML Ausgabe fuer PRTG erzeugen
-$output = @"
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Physikalische Kerne</channel>`n" 
+$OutputStringXML += "<value>"+$($Hostdata.PhysicalCores)+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Logische Kerne</channel>`n" 
+$OutputStringXML += "<value>"+$($Hostdata.LogicalCores)+"</value>`n"
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>virtuelle Kerne</channel>`n"
+$OutputStringXML += "<value>"+$logCPURatio+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Core:vCore Faktor</channel>`n"
+$OutputStringXML += "<value>"+$CPURatio+"</value>`n" 
+$OutputStringXML += "<Float>1</Float>`n"
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>LogicalCore:vCore Faktor (1 zu X)</channel>`n"
+$OutputStringXML += "<value>"+$logCPURatio+"</value>`n" 
+$OutputStringXML += "<Float>1</Float>`n"
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Anzahl VM</channel>`n"
+$OutputStringXML += "<value>"+$($Hostdata.VMCount)+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>" + $TextPRTGSensor  + "</text>`n"
+$OutputStringXML += "</prtg>"
 
-<?xml version=`"1.0`" encoding=`"UTF-8`" ?>
-<prtg>
-<result>
-<channel>Physikalische Kerne</channel>
-<value>$($Hostdata.PhysicalCores)</value>
-</result>
-<result>
-<channel>Logische Kerne</channel>
-<value>$($Hostdata.LogicalCores)</value>
-</result>
-<result>
-<channel>virtuelle Kerne</channel>
-<value>$($Hostdata.VirtualCores)</value>
-</result>
-<result>
-<channel>Core:vCore Faktor</channel>
-<value>$CPURatio</value>
-<Float>1</Float>
-</result>
-<result>
-<channel>LogicalCore:vCore Faktor (1 zu X)</channel>
-<value>$logCPURatio</value>
-<Float>1</Float>
-</result>
-<result>
-<channel>Anzahl VM</channel>
-<value>$($Hostdata.VMCount)</value>
-</result>
-<text>$OutPutText</text>
-</prtg>
-"@
-
-[Console]::WriteLine($output)
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
