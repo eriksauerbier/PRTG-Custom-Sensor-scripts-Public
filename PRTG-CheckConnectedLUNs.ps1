@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript prüft wieviele LUNs pro Hyper-V Host an jedem ClusterNode verbunden sind und schlägt bei ungleichheit an
-# Stannek GmbH - E.Sauerbier - v.1.1 - 11.01.2023
+# Stannek GmbH - E.Sauerbier - v.1.2 - 07.11.2023
 
 # Parameter für den PRTG-Sensor (ClusterNode auf dem das Skript ausgeführt wird und ClusterName
 param([string]$VMHost = "N/A",[string]$Cluster = "N/A",[string]$Password = ' ',$Admin = " ",[string]$Domain = ' ')
@@ -35,14 +35,18 @@ If ($LUNCompareValue -ne $LunCount) {$failureHost += @($ClusterNode)}
 }
 
 # Ausgabe-Text generieren
-If ($failureHost.count -eq "0") {$OutPutText = "Die MPIO-LUN Verbindungen sind OK"}
-Else {$OutPutText = "An " + $failureHost.count + " Hosts passen die MPIO-LUN Verbindungen nicht ("+$failureHost+")"}
+If ($failureHost.count -eq "0") {$TextPRTGSensor = "Die MPIO-LUN Verbindungen sind OK"}
+Else {$TextPRTGSensor = "An " + $failureHost.count + " Hosts passen die MPIO-LUN Verbindungen nicht ("+$failureHost+")"}
 
-# Ausgabe für PRTG
-"<prtg>"
-"<result>" 
-"<channel>Host mit fehlerhafter LUN-Verbindung</channel>"    
-"<value>"+ $failureHost.Count +"</value>" 
-"</result>"
-"<text>"+$OutPutText+"</text>"
-"</prtg>"
+# Ausgabe-Variable fuer PRTG erzeugen
+$OutputStringXML = "<?xml version=`"1.0`"?>`n"
+$OutputStringXML += "<prtg>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Host mit fehlerhafter LUN-Verbindung</channel>`n" 
+$OutputStringXML += "<value>"+$failureHost.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<text>"+$TextPRTGSensor+"</text>`n"
+$OutputStringXML += "</prtg>"
+
+# Ausgabe fuer PRTG
+Write-Output -InputObject $OutputStringXML
