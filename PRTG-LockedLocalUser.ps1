@@ -1,9 +1,8 @@
 # Dieses PRTG-Skript prüft ob ein Lokaler Benutzer gesperrt ist
-# Stannek GmbH - E.Sauerbier - v.1.1 - 07.11.2023
+# Stannek GmbH - E.Sauerbier - v.1.1.1 - 17.11.2023
 
 # Lokale User Abfrage
 $lockedAccounts = @(Get-WmiObject win32_useraccount -filter "LockOut=True")
-$lockedAccounts.name
 
 # Text für Ausgabe generieren
 if ($lockedAccounts.count -gt "0") {$TextPRTGSensor = "Folgende lokale Benutzer sind gesperrt: "+$lockedAccounts.name}
