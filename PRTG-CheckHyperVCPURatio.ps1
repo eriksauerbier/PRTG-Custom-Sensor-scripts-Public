@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Ueberbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.4 - 07.11.2023
+# Stannek GmbH - E.Sauerbier - v.1.4.1 - 19.12.2023
 
 # Parameter fuer den PRTG-Sensor
 param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
@@ -58,7 +58,7 @@ $OutputStringXML += "<value>"+$($Hostdata.LogicalCores)+"</value>`n"
 $OutputStringXML += "</result>`n"
 $OutputStringXML += "<result>`n" 
 $OutputStringXML += "<channel>virtuelle Kerne</channel>`n"
-$OutputStringXML += "<value>"+$logCPURatio+"</value>`n" 
+$OutputStringXML += "<value>"+$Hostdata.VirtualCores+"</value>`n" 
 $OutputStringXML += "</result>`n"
 $OutputStringXML += "<result>`n" 
 $OutputStringXML += "<channel>Core:vCore Faktor</channel>`n"
