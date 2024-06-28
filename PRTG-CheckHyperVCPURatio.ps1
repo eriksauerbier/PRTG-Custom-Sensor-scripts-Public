@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Ueberbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.4.1 - 19.12.2023
+# Stannek GmbH - E.Sauerbier - v.1.5 - 28.06.2024
 
 # Parameter fuer den PRTG-Sensor
 param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
@@ -8,9 +8,10 @@ param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
 
 # Funktion zum auslesen der Hyper-V Host Infos. Written by Haiko Hertes | www.hertes.net
 function Get-HyperVHostInfo()
-{   $vCores = ((Get-VM -ComputerName $env:COMPUTERNAME).ProcessorCount | Measure-Object -Sum).Sum
-    
-    $VMCount = (Get-VM -ComputerName $env:COMPUTERNAME).Count
+{   $VMs = Get-VM -ComputerName $env:COMPUTERNAME
+    $vCores = (($VMs | Where-Object State -ne Off).ProcessorCount | Measure-Object -Sum).Sum
+    $VMCount = $VMs.Count
+    $VMCountRun = ($VMs | Where-Object State -ne Off).Count
     $Property = '"numberOfCores", "NumberOfLogicalProcessors"'
     $CPUs = Get-Ciminstance -class Win32_Processor -Property "numberOfCores", "NumberOfLogicalProcessors" | Select-Object -Property "numberOfCores", "NumberOfLogicalProcessors"
     $Cores = ($CPUs.numberOfCores | Measure-Object -Sum).Sum
@@ -27,6 +28,7 @@ function Get-HyperVHostInfo()
     $object | Add-Member –MemberType NoteProperty –Name MemFreeGB -Value ([math]::Round($os.FreePhysicalMemory/1mb,2))
     $object | Add-Member –MemberType NoteProperty –Name MemFreePct -Value $MemFreePct
     $object | Add-Member –MemberType NoteProperty –Name VMCount -Value $VMCount
+    $object | Add-Member –MemberType NoteProperty –Name VMCountRunning -Value $VMCountRun
 
     Return $object
 }
@@ -73,6 +75,9 @@ $OutputStringXML += "</result>`n"
 $OutputStringXML += "<result>`n" 
 $OutputStringXML += "<channel>Anzahl VM</channel>`n"
 $OutputStringXML += "<value>"+$($Hostdata.VMCount)+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<channel>Anzahl VM (Laufend)</channel>`n"
+$OutputStringXML += "<value>"+$($Hostdata.VMCountRunning)+"</value>`n" 
 $OutputStringXML += "</result>`n"
 $OutputStringXML += "<text>" + $TextPRTGSensor  + "</text>`n"
 $OutputStringXML += "</prtg>"
