@@ -1,5 +1,5 @@
 ﻿# Dieses PRTG-Skript zum auslesen des CPU Ueberbuchungsfaktors.
-# Stannek GmbH - E.Sauerbier - v.1.5 - 28.06.2024
+# Stannek GmbH - E.Sauerbier - v.1.5.1 - 28.06.2024
 
 # Parameter fuer den PRTG-Sensor
 param([string]$HyperVHost = "",[string]$Password = '',$Admin = "")
@@ -76,6 +76,7 @@ $OutputStringXML += "<result>`n"
 $OutputStringXML += "<channel>Anzahl VM</channel>`n"
 $OutputStringXML += "<value>"+$($Hostdata.VMCount)+"</value>`n" 
 $OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
 $OutputStringXML += "<channel>Anzahl VM (Laufend)</channel>`n"
 $OutputStringXML += "<value>"+$($Hostdata.VMCountRunning)+"</value>`n" 
 $OutputStringXML += "</result>`n"
