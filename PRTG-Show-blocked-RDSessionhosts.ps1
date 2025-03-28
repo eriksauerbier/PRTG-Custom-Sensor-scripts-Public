@@ -1,14 +1,19 @@
 ﻿# PRTG-Skript zum Anzeigen der RD-Sessionhosts mit gesperrter Anmeldung
-# Stannek GmbH - v.1.2 - 07.11.2022 - E.Sauerbier
+# Stannek GmbH - v.1.3 - 28.03.2025 - E.Sauerbier
 
 # Beachte dass dieses Skript nur mit der 64Bit Powershell läuft, 
 # hierzu muss ein mittels PRTG ein "Start-Skript" gestartet werden, da die Probe nur als 32Bit-Version verfügbar ist (Stand 05.2022)
 
+# TSFarmen auslesen
+$Collections = Get-RDSessionCollection
+
 # RD-SessionHosts auslesen
-$SessionHost = Get-RDSessionCollection | Get-RDSessionHost
+Foreach ($Collection in $Collections) {
+            $SessionHosts += $Collection | Get-RDSessionHost
+            }
 
 # gesperrte Hosts auslesen
-$BlockedHosts = $SessionHost | Where NewConnectionAllowed -eq No
+$BlockedHosts = $SessionHosts | Where NewConnectionAllowed -eq No
 
 # Ausgabetext generieren 
 if ($Null -eq $blockedHosts) {$TextPRTGSensor = "Es sind keine Sessionhosts gesperrt"}
