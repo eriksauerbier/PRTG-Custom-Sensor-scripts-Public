@@ -1,11 +1,14 @@
 ﻿# PRTG-Skript zum Anzeigen der RD-Sessionhosts mit gesperrter Anmeldung
-# Stannek GmbH - v.1.3 - 28.03.2025 - E.Sauerbier
+# Stannek GmbH - v.1.4 - 22.04.2025 - E.Sauerbier
 
 # Beachte dass dieses Skript nur mit der 64Bit Powershell läuft, 
 # hierzu muss ein mittels PRTG ein "Start-Skript" gestartet werden, da die Probe nur als 32Bit-Version verfügbar ist (Stand 05.2022)
 
 # TSFarmen auslesen
 $Collections = Get-RDSessionCollection
+
+# Objectvariable erstellen
+$SessionHosts = @()
 
 # RD-SessionHosts auslesen
 Foreach ($Collection in $Collections) {
@@ -27,8 +30,12 @@ $OutputStringXML += "<channel>Gesperrte Sessionhosts</channel>`n"
 $OutputStringXML += "<value>"+$BlockedHosts.Count+"</value>`n" 
 $OutputStringXML += "</result>`n"
 $OutputStringXML += "<result>`n" 
-$OutputStringXML += "<channel>Anzahl der Sessionhosts in der Sammlung</channel>`n" 
-$OutputStringXML += "<value>"+$SessionHost.Count+"</value>`n" 
+$OutputStringXML += "<channel>Anzahl der Sessionhosts</channel>`n" 
+$OutputStringXML += "<value>"+$SessionHosts.Count+"</value>`n" 
+$OutputStringXML += "</result>`n"
+$OutputStringXML += "<result>`n" 
+$OutputStringXML += "<channel>Anzahl der Sammlungen</channel>`n" 
+$OutputStringXML += "<value>"+$Collections.Count+"</value>`n" 
 $OutputStringXML += "</result>`n"
 $OutputStringXML += "<text>"+$TextPRTGSensor+"</text>`n"
 $OutputStringXML += "</prtg>"
